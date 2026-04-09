@@ -3,161 +3,74 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>My Spline Portfolio</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #f0f0f0; /* 全局網頁背景 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #f0f0f0;
+            display: flex; justify-content: center; align-items: center;
         }
-
-
-        /* 1. 遊戲機外殼與 3D 的整體容器 */
         #game-console-container {
-            position: relative;
-            /* 這裡是關鍵：將容器設定為你 SVG 的大致比例，例如 2:1 */
-            width: 100vw; 
-            max-width: 1200px; /* 限制最大寬度，防止在大螢幕上拉太寬 */
-            height: 50vw; /* 高度隨著寬度變化 */
-            max-height: 600px; /* 限制最大高度 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: relative; width: 100vw; max-width: 1200px;
+            height: 50vw; max-height: 600px;
+            display: flex; justify-content: center; align-items: center;
         }
-
-        /* 2. 底層：Spline 3D 場景 */
- 	#mySpline { /* 或者直接寫 spline-viewer */
-   	 position: absolute;
- 	   top: 50%;
- 	   left: 50%;
-   	 transform: translate(-50%, -50%); 
-    
-  	  /* 這裡維持你之前的微調 */
- 	   width: 90%; 
- 	   height: 80%; 
-    
-   	 z-index: 1; 
-   	 background-color: transparent;
-	}
-
-        /* 3. 頂層：遊戲機外殼 (你的 SVG) */
-        #gamepad-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10; /* 在 3D 場景之上 */
-            background-image: url('https://res.cloudinary.com/do3p1vjeh/image/upload/v1775653225/Group_18_hxvqvw.svg');
-            background-size: contain; /* 確保整張手把圖都能看見 */
-            background-position: center;
-            background-repeat: no-repeat;
-            pointer-events: none; /* 滑鼠穿透圖片點擊到後面的 3D */
-        }
-
-        /* 4. 巧妙蓋住 Logo 的遮罩 🎯 */
-        #logo-mask {
-            position: absolute;
-            bottom: 0px;  /* 根據你 iframe 的位置和高度調整 */
-            right: 0px;   /* 根據你 iframe 的位置調整 */
-            
-            /* 🎯 🎯 此處需要你微調 🎯 🎯 
-               調整大小與位置，精確蓋住右下角的 Logo。
-               將背景顏色設為你 SVG 圖片（手把部分）的白色，就能完美融合。
-            */
-            width: 140px; /* Logo 大致寬度 */
-            height: 50px; /* Logo 大致高度 */
-            background-color: #f7f9fa; /* 🎯 設定為與你手把圖右下角相同的顏色 🎯 */
-            z-index: 11; /* 確保它在 iframe 之上，但在 SVG 之上或之下都可以，最好設高一點 */
-            pointer-events: auto; /* 這個遮罩不需要穿透滑鼠 */
-        }
-
-        /* --- 其他原本的代碼 (按鈕與彈窗) --- */
-        .controller-btn { color:red; }
-        #project-modal { ... }
     </style>
 </head>
 <body>
-<div id="game-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+
+<div id="game-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;">
   <h2>水晶的秘密</h2>
   <p>這是一段圖文並茂的介紹...</p>
   <button onclick="closeAndScore()">確認並關閉</button>
 </div>
 
-
 <div id="game-console-container">
-<spline-viewer id="mySpline" url="https://prod.spline.design/IoY9aN4lpwKGTm-4/scene.splinecode"></spline-viewer>    <div id="logo-mask"></div>
-
+    <spline-viewer id="mySpline" url="https://prod.spline.design/IoY9aN4lpwKGTm-4/scene.splinecode"></spline-viewer>
+    
+    <div id="logo-mask"></div>
     <div id="gamepad-overlay">
         <div id="btn-up" class="controller-btn"></div>
         <div id="btn-a" class="controller-btn"></div>
     </div>
 </div>
 
-<script>
-    const splineElement = document.getElementById('mySpline');
+<script type="module" src="https://cdn.jsdelivr.net/npm/@splinetool/viewer@1.9.28/build/spline-viewer.js"></script>
 
-    splineElement.addEventListener('load', () => {
-        console.log("✅ Spline 載入成功！當前版本應支援 getVariable");
+<script>
+    const spline = document.getElementById('mySpline');
+
+    // 💡 監聽 Spline 載入
+    spline.addEventListener('load', () => {
+        console.log("✅ Spline 載入成功，版本 1.9.28 已就緒");
         
         setInterval(() => {
             try {
-                // 檢查變數
-                const trigger = splineElement.getVariable('TriggerPopup');
-                
-                // 只要 trigger 不是 undefined 且等於 1 就觸發
-                if (trigger === 1) {
-                    console.log("🚀 偵測到觸發訊號！彈窗跳出");
-                    openWebPopup();
-                    splineElement.setVariable('TriggerPopup', 0);
+                // 檢查變數 TriggerPopup
+                if (spline.getVariable('TriggerPopup') === 1) {
+                    console.log("🚀 觸發成功！彈窗開啟");
+                    document.getElementById('game-popup').style.display = 'block';
+                    spline.setVariable('TriggerPopup', 0); // 重置為 0
                 }
             } catch (e) {
-                // 如果還是報錯，會在控制台印出來
-                console.error("目前仍無法讀取變數，請確認版本:", e.message);
+                // 加載中暫時忽略錯誤
             }
-        }, 500); // 稍微放慢一點點檢查頻率
+        }, 300);
     });
 
-    function openWebPopup() {
-        document.getElementById('game-popup').style.display = 'block';
-    }
-</script>
-
-<script type="module" src="https://cdn.jsdelivr.net/npm/@splinetool/viewer@1.9.28/build/spline-viewer.js"></script>
-
-    <script>
-        const spline = document.getElementById('mySpline');
-        
-        spline.addEventListener('load', () => {
-            console.log("✅ Spline 已就緒");
-            setInterval(() => {
-                try {
-                    // 這裡會抓取你在 Spline 裡面設定的變數
-                    if (spline.getVariable('TriggerPopup') === 1) {
-                        document.getElementById('game-popup').style.display = 'block';
-                        spline.setVariable('TriggerPopup', 0); // 重置觸發器
-                    }
-                } catch (e) {
-                    // 靜默處理加載中錯誤
-                }
-            }, 300);
-        });
-
-        window.closeAndScore = function() {
-            document.getElementById('game-popup').style.display = 'none';
-            // 點擊確認後 GemCount +1
+    // 關閉彈窗並加分
+    window.closeAndScore = function() {
+        document.getElementById('game-popup').style.display = 'none';
+        try {
             const current = spline.getVariable('GemCount') || 0;
             spline.setVariable('GemCount', current + 1);
-        };
-    </script>
-</body>
-	
+            console.log("💎 寶石數量已更新為:", current + 1);
+        } catch (e) {
+            console.error("無法存取變數 GemCount");
+        }
+    };
+</script>
+
 </body>
 </html>
