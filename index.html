@@ -103,27 +103,32 @@
 </div>
 
 <script>
-    // 1. 取得 Spline Viewer 的控制權
     const splineElement = document.getElementById('mySpline');
 
-    // 2. 定義 Spline 呼叫的函式 (對應你在 Spline URL 填的內容)
-    window.openWebPopup = function() {
-        console.log("Spline 訊號已送達！");
+    // 💡 加強版定義：同時綁定到 window 和 globalThis，確保 Spline 任何角度都能找到它
+    const openWebPopup = function() {
+        console.log("Spline 訊號已成功接收！");
         const popup = document.getElementById('game-popup');
-        popup.style.display = 'block';
+        if (popup) {
+            popup.style.display = 'block';
+        } else {
+            console.error("找不到 ID 為 game-popup 的元素");
+        }
     };
 
-    // 3. 定義按下確認按鈕後的邏輯
-    window.closeAndScore = function() {
-        // A. 隱藏 HTML 彈窗
-        document.getElementById('game-popup').style.display = 'none';
+    // 確保全域都能存取
+    window.openWebPopup = openWebPopup;
+    globalThis.openWebPopup = openWebPopup;
 
-        // B. 從 Spline 取得目前的 GemCount 變數並 +1
-        // 注意：請確保你的變數名稱確實叫 GemCount
-        const currentGems = splineElement.getVariable('GemCount');
-        splineElement.setVariable('GemCount', currentGems + 1);
-        
-        console.log("進度已更新，目前的寶石數：", currentGems + 1);
+    window.closeAndScore = function() {
+        document.getElementById('game-popup').style.display = 'none';
+        try {
+            const currentGems = splineElement.getVariable('GemCount');
+            splineElement.setVariable('GemCount', currentGems + 1);
+            console.log("寶石更新成功：", currentGems + 1);
+        } catch (e) {
+            console.error("Spline 變數存取失敗：", e);
+        }
     };
 </script>
 
