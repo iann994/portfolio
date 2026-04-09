@@ -103,26 +103,40 @@
 </div>
 
 <script>
-    // 使用傳統定義方式，確保函式提早被瀏覽器註冊
-    function openWebPopup() {
-        console.log("Spline 訊號已成功接收！");
-        const popup = document.getElementById('game-popup');
-        if (popup) {
-            popup.style.display = 'block';
+    const splineElement = document.getElementById('mySpline');
+
+    // 💡 核心邏輯：每 0.1 秒檢查一次 Spline 內部的變數
+    setInterval(() => {
+        if (splineElement) {
+            try {
+                // 讀取我們剛剛設好的變數
+                const trigger = splineElement.getVariable('TriggerPopup');
+                
+                if (trigger === 1) {
+                    // 1. 執行跳窗
+                    openWebPopup();
+                    
+                    // 2. 立即把變數設回 0，防止彈窗無限重複彈出
+                    splineElement.setVariable('TriggerPopup', 0);
+                }
+            } catch (e) {
+                // 如果 Spline 還沒加載完，先忽略錯誤
+            }
         }
+    }, 100); 
+
+    function openWebPopup() {
+        console.log("偵測到變數改變，彈窗啟動！");
+        const popup = document.getElementById('game-popup');
+        if (popup) popup.style.display = 'block';
     }
 
-    // 關鍵：將函式強行綁定到全域
-    window.openWebPopup = openWebPopup;
-    globalThis.openWebPopup = openWebPopup;
-
-    function closeAndScore() {
+    window.closeAndScore = function() {
         document.getElementById('game-popup').style.display = 'none';
-        const splineElement = document.getElementById('mySpline');
+        // 原本的寶石邏輯不變
         const currentGems = splineElement.getVariable('GemCount');
         splineElement.setVariable('GemCount', currentGems + 1);
-    }
-    window.closeAndScore = closeAndScore;
+    };
 </script>
 
 </body>
