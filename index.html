@@ -104,25 +104,30 @@
 <script>
     const splineElement = document.getElementById('mySpline');
 
-    // 等載入完再開始監聽，最保險
     splineElement.addEventListener('load', () => {
-        console.log("Spline 載入成功");
+        console.log("✅ Spline 載入成功！當前版本應支援 getVariable");
+        
         setInterval(() => {
             try {
+                // 檢查變數
                 const trigger = splineElement.getVariable('TriggerPopup');
+                
+                // 只要 trigger 不是 undefined 且等於 1 就觸發
                 if (trigger === 1) {
-                    window.openWebPopup();
+                    console.log("🚀 偵測到觸發訊號！彈窗跳出");
+                    openWebPopup();
                     splineElement.setVariable('TriggerPopup', 0);
                 }
             } catch (e) {
-                // 忽略加載初期的錯誤
+                // 如果還是報錯，會在控制台印出來
+                console.error("目前仍無法讀取變數，請確認版本:", e.message);
             }
-        }, 200);
+        }, 500); // 稍微放慢一點點檢查頻率
     });
 
-    window.openWebPopup = function() {
+    function openWebPopup() {
         document.getElementById('game-popup').style.display = 'block';
-    };
+    }
 </script>
 <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.28/build/spline-viewer.js"></script>
 </body>
