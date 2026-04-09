@@ -105,46 +105,24 @@
 <script>
     const splineElement = document.getElementById('mySpline');
 
-    // 💡 確保 Spline 完全載入後才開始監聽
+    // 等載入完再開始監聽，最保險
     splineElement.addEventListener('load', () => {
-        console.log("Spline 載入完成，開始監聽變數！");
-        
+        console.log("Spline 載入成功");
         setInterval(() => {
             try {
-                // 嘗試抓取變數
                 const trigger = splineElement.getVariable('TriggerPopup');
-                
-                // 如果偵測到 1
                 if (trigger === 1) {
-                    console.log("偵測到觸發訊號！");
-                    openWebPopup();
-                    
-                    // 回傳給 Spline 歸零，避免重複跳窗
+                    window.openWebPopup();
                     splineElement.setVariable('TriggerPopup', 0);
                 }
-            } catch (err) {
-                // 這裡留空，避免還沒讀取到變數時報錯
+            } catch (e) {
+                // 忽略加載初期的錯誤
             }
-        }, 200); // 每 0.2 秒檢查一次
+        }, 200);
     });
 
-    function openWebPopup() {
-        const popup = document.getElementById('game-popup');
-        if (popup) {
-            popup.style.display = 'block';
-        }
-    }
-
-    window.closeAndScore = function() {
-        document.getElementById('game-popup').style.display = 'none';
-        
-        // 更新寶石數
-        try {
-            const currentGems = splineElement.getVariable('GemCount');
-            splineElement.setVariable('GemCount', currentGems + 1);
-        } catch (e) {
-            console.error("無法更新寶石變數", e);
-        }
+    window.openWebPopup = function() {
+        document.getElementById('game-popup').style.display = 'block';
     };
 </script>
 
