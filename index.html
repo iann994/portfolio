@@ -129,6 +129,35 @@
         document.getElementById('game-popup').style.display = 'block';
     }
 </script>
-<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.28/build/spline-viewer.js"></script>
+
+<script type="module" src="https://cdn.jsdelivr.net/npm/@splinetool/viewer@1.9.28/build/spline-viewer.js"></script>
+
+    <script>
+        const spline = document.getElementById('mySpline');
+        
+        spline.addEventListener('load', () => {
+            console.log("✅ Spline 已就緒");
+            setInterval(() => {
+                try {
+                    // 這裡會抓取你在 Spline 裡面設定的變數
+                    if (spline.getVariable('TriggerPopup') === 1) {
+                        document.getElementById('game-popup').style.display = 'block';
+                        spline.setVariable('TriggerPopup', 0); // 重置觸發器
+                    }
+                } catch (e) {
+                    // 靜默處理加載中錯誤
+                }
+            }, 300);
+        });
+
+        window.closeAndScore = function() {
+            document.getElementById('game-popup').style.display = 'none';
+            // 點擊確認後 GemCount +1
+            const current = spline.getVariable('GemCount') || 0;
+            spline.setVariable('GemCount', current + 1);
+        };
+    </script>
+</body>
+	
 </body>
 </html>
