@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Game Console Portfolio</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #f0f0f0;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        #game-console-container {
+            position: relative;
+            width: 100vw; max-width: 1200px;
+            height: 56.25vw; max-height: 675px;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        #mySpline {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%); 
+            width: 85%; height: 75%; 
+            z-index: 1; 
+        }
+
+        #gamepad-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            background-image: url('https://res.cloudinary.com/do3p1vjeh/image/upload/v1775653225/Group_18_hxvqvw.svg');
+            background-size: contain; background-position: center; background-repeat: no-repeat;
+            pointer-events: none; 
+        }
+
+        /* --- 十字鍵容器：已更新為你微調後的座標 --- */
+        .d-pad-container {
+            position: absolute;
+            left: 7.8%; 
+            top: 49.5%;
+            width: 150px;
+            height: 150px;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+        }
+
+        /* 統一設定基礎半透明紅色 */
+        .controller-btn, .d-pad-center {
+            background-color: rgba(255, 0, 0, 0.4); /* 對位完成後可將 0.4 改為 0 */
+            transition: background-color 0.1s;
+        }
+
+        .controller-btn {
+            position: absolute;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 按下時加深顏色 */
+        .controller-btn.pressed {
+            background-color: rgba(255, 0, 0, 0.8);
+        }
+
+        /* 十字鍵排版：完全不重疊的精確座標 */
+        #btn-up {
+            width: 50px; height: 50px;
+            left: 50px; top: 0;
+            border-radius: 10px 10px 0 0;
+        }
+        #btn-down {
+            width: 50px; height: 50px;
+            left: 50px; bottom: 0;
+            border-radius: 0 0 10px 10px;
+        }
+        #btn-left {
+            width: 50px; height: 50px;
+            left: 0; top: 50px;
+            border-radius: 10px 0 0 10px;
+        }
+        #btn-right {
+            width: 50px; height: 50px;
+            right: 0; top: 50px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        /* 中心視覺補塊 */
+        .d-pad-center {
+            position: absolute;
+            width: 50px; height: 50px;
+            left: 50px; top: 50px;
+            pointer-events: none;
+        }
+
+        /* A 按鈕 (獨立座標) */
+        #btn-a {
+            position: absolute;
+            width: 80px; height: 80px;
+            right: 12.5%; top: 46%;
+            border-radius: 50%;
+            z-index: 20;
+            background-color: rgba(255, 0, 0, 0.4);
+            cursor: pointer;
+            transform: translate(50%, -50%);
+        }
+        #btn-a.pressed { 
+            background-color: rgba(255, 0, 0, 0.8); 
+            transform: translate(50%, -50%) scale(0.9); 
+        }
+
+        #game-popup {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 1000;
+            background: white; padding: 30px; border-radius: 24px; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-console-container">
+        <spline-viewer id="mySpline" url="https://prod.spline.design/IoY9aN4lpwKGTm-4/scene.splinecode"></spline-viewer>
+        <div id="gamepad-overlay"></div>
+        
+        <div class="d-pad-container">
+            <div id="btn-up" class="controller-btn" data-key="w" data-code="KeyW" data-num="87"></div>
+            <div id="btn-down" class="controller-btn" data-key="s" data-code="KeyS" data-num="83"></div>
+            <div id="btn-left" class="controller-btn" data-key="a" data-code="KeyA" data-num="65"></div>
+            <div id="btn-right" class="controller-btn" data-key="d" data-code="KeyD" data-num="68"></div>
+            <div class="d-pad-center"></div>
+        </div>
+
+        <div id="btn-a" class="controller-btn" data-key="Enter" data-code="Enter" data-num="13"></div>
+    </div>
+
+    <div id="game-popup">
+        <h2>發現水晶！</h2>
+        <button onclick="closeAndScore()">確認</button>
+    </div>
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@splinetool/viewer@1.9.28/build/spline-viewer.js"></script>
+
+    <script>
+        const spline = document.getElementById('mySpline');
+        let activeKeys = new Map();
+
+        // 核心模擬循環
+        function loop() {
+            activeKeys.forEach((config) => {
+                const event = new KeyboardEvent('keydown', {
+                    key: config.key, code: config.code, keyCode: config.num, which: config.num, bubbles: true
+                });
+                window.dispatchEvent(event);
+                document.dispatchEvent(event);
+            });
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+
+        function startAction(id) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.classList.add('pressed');
+            activeKeys.set(id, {
+                key: btn.getAttribute('data-key'),
+                code: btn.getAttribute('data-code'),
+                num: parseInt(btn.getAttribute('data-num'))
+            });
+        }
+
+        function stopAction(id) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.classList.remove('pressed');
+            const config = activeKeys.get(id);
+            if (config) {
+                const event = new KeyboardEvent('keyup', { key: config.key, code: config.code, keyCode: config.num, bubbles: true });
+                window.dispatchEvent(event);
+                document.dispatchEvent(event);
+            }
+            activeKeys.delete(id);
+        }
+
+        document.querySelectorAll('.controller-btn').forEach(btn => {
+            btn.addEventListener('mousedown', () => startAction(btn.id));
+            btn.addEventListener('mouseup', () => stopAction(btn.id));
+            btn.addEventListener('mouseleave', () => stopAction(btn.id));
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); startAction(btn.id); }, {passive: false});
+            btn.addEventListener('touchend', () => stopAction(btn.id));
+        });
+
+        // 實體鍵盤同步
+        const keyToId = { 'w': 'btn-up', 's': 'btn-down', 'a': 'btn-left', 'd': 'btn-right', 'enter': 'btn-a' };
+        window.addEventListener('keydown', (e) => {
+            const id = keyToId[e.key.toLowerCase()];
+            if (id) document.getElementById(id).classList.add('pressed');
+        });
+        window.addEventListener('keyup', (e) => {
+            const id = keyToId[e.key.toLowerCase()];
+            if (id) document.getElementById(id).classList.remove('pressed');
+        });
+
+        window.closeAndScore = function() {
+            document.getElementById('game-popup').style.display = 'none';
+            try {
+                const current = spline.getVariable('GemCount') || 0;
+                spline.setVariable('GemCount', current + 1);
+            } catch (e) {}
+        };
+    </script>
+</body>
+</html>
